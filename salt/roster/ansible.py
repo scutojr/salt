@@ -97,7 +97,6 @@ import subprocess
 
 # Import Salt libs
 import salt.utils
-import salt.utils.files
 from salt.roster import get_roster_file
 
 # Import 3rd-party libs
@@ -198,10 +197,8 @@ class Inventory(Target):
                     else:
                         proc = '_parse_group_line'
                         varname = line.strip('[]')
-
+                else:
                     getattr(self, proc)(line, varname)
-
-                continue
 
     def _parse_group_line(self, line, varname):
         '''
@@ -211,8 +208,8 @@ class Inventory(Target):
         name = line_args[0]
         host = {line_args[0]: dict()}
         for arg in line_args[1:]:
-            key, value = arg.split('=')
-            host[name][CONVERSION[key]] = value
+            key, value = arg.split('=', 1)
+            host[name][CONVERSION.get(key, key)] = value
         if 'sudo' in host[name]:
             host[name]['passwd'], host[name]['sudo'] = host[name]['sudo'], True
         if self.groups.get(varname, ''):
@@ -224,7 +221,7 @@ class Inventory(Target):
         '''
         Parse lines in the inventory file that are under the same [*:vars] block
         '''
-        key, value = line.split('=')
+        key, value = line.split('=', 1)
         if varname not in self.hostvars:
             self.hostvars[varname] = dict()
         self.hostvars[varname][key] = value
